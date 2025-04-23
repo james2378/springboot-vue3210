@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.TongzhiDao">
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        a.id as id
+        ,a.jiaoshi_id as jiaoshiId
+        ,a.tongzhi_name as tongzhiName
+        ,a.tongzhi_types as tongzhiTypes
+        ,a.tongzhi_photo as tongzhiPhoto
+        ,a.insert_time as insertTime
+        ,a.tongzhi_content as tongzhiContent
+        ,a.create_time as createTime
+    </sql>
+    <select id="selectListView" parameterType="map" resultType="com.entity.view.TongzhiView" >
+        SELECT
+        <include refid="Base_Column_List" />
+
+--         级联表的字段
+        ,jiaoshi.jiaoshi_name as jiaoshiName
+        ,jiaoshi.jiaoshi_phone as jiaoshiPhone
+        ,jiaoshi.jiaoshi_photo as jiaoshiPhoto
+        ,jiaoshi.jiaoshi_email as jiaoshiEmail
+
+        FROM tongzhi  a
+        left JOIN jiaoshi jiaoshi ON a.jiaoshi_id = jiaoshi.id
+
+        <where>
+            <if test="params.ids != null">
+                and a.id in
+                <foreach item="item" index="index" collection="params.ids" open="(" separator="," close=")">
+                #{item}
+                </foreach>
+            </if>
+            <if test="params.jiaoshiId != null and params.jiaoshiId != ''">
+                and (
+                    a.jiaoshi_id = #{params.jiaoshiId}
+                )
+            </if>
+            <if test=" params.tongzhiName != '' and params.tongzhiName != null and params.tongzhiName != 'null' ">
+                and a.tongzhi_name like CONCAT('%',#{params.tongzhiName},'%')
+            </if>
+            <if test="params.tongzhiTypes != null and params.tongzhiTypes != ''">
+                and a.tongzhi_types = #{params.tongzhiTypes}
+            </if>
+            <if test=" params.insertTimeStart != '' and params.insertTimeStart != null ">
+                <![CDATA[  and UNIX_TIMESTAMP(a.insert_time) >= UNIX_TIMESTAMP(#{params.insertTimeStart}) ]]>
+            </if>
+            <if test=" params.insertTimeEnd != '' and params.insertTimeEnd != null ">
+                <![CDATA[  and UNIX_TIMESTAMP(a.insert_time) <= UNIX_TIMESTAMP(#{params.insertTimeEnd}) ]]>
+            </if>
+            <if test=" params.tongzhiContent != '' and params.tongzhiContent != null and params.tongzhiContent != 'null' ">
+                and a.tongzhi_content like CONCAT('%',#{params.tongzhiContent},'%')
+            </if>
+
+                <!-- 判断教师的id不为空 -->
+            <if test=" params.jiaoshiIdNotNull != '' and params.jiaoshiIdNotNull != null and params.jiaoshiIdNotNull != 'null' ">
+                and a.jiaoshi_id IS NOT NULL
+            </if>
+            <if test=" params.jiaoshiName != '' and params.jiaoshiName != null and params.jiaoshiName != 'null' ">
+                and jiaoshi.jiaoshi_name like CONCAT('%',#{params.jiaoshiName},'%')
+            </if>
+            <if test=" params.jiaoshiPhone != '' and params.jiaoshiPhone != null and params.jiaoshiPhone != 'null' ">
+                and jiaoshi.jiaoshi_phone like CONCAT('%',#{params.jiaoshiPhone},'%')
+            </if>
+            <if test=" params.jiaoshiEmail != '' and params.jiaoshiEmail != null and params.jiaoshiEmail != 'null' ">
+                and jiaoshi.jiaoshi_email like CONCAT('%',#{params.jiaoshiEmail},'%')
+            </if>
+        </where>
+
+        order by a.${params.orderBy} desc 
+    </select>
+
+</mapper>
